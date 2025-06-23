@@ -3,9 +3,10 @@ Edit event tool for Google Calendar integration.
 """
 
 from .calendar_utils import get_calendar_service, parse_datetime
-
+from session_store import session_tokens
 
 def edit_event(
+    session_id: str,
     event_id: str,
     summary: str,
     start_time: str,
@@ -24,8 +25,21 @@ def edit_event(
         dict: Information about the edited event or error details
     """
     try:
+        tokens = session_tokens.get(session_id)
+        if not tokens:
+            return {
+                "status": "error",
+                "message": "No se encontraron credenciales para esta sesión.",
+                "events": [],
+            }
+        
         # Get calendar service
-        service = get_calendar_service()
+        service = get_calendar_service(
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            client_id=tokens["client_id"],
+            client_secret=tokens["client_secret"],
+        )
         if not service:
             return {
                 "status": "error",

@@ -17,46 +17,60 @@ from googleapiclient.discovery import build
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 # Path for token storage
-TOKEN_PATH = Path(os.path.expanduser("~/.credentials/calendar_token.json"))
-CREDENTIALS_PATH = Path("credentials.json")
+# TOKEN_PATH = Path(os.path.expanduser("~/.credentials/calendar_token.json"))
+# CREDENTIALS_PATH = Path("credentials.json")
 
 
-def get_calendar_service():
+# def get_calendar_service():
+#     """
+#     Authenticate and create a Google Calendar service object.
+
+#     Returns:
+#         A Google Calendar service object or None if authentication fails
+#     """
+#     creds = None
+
+#     # Check if token exists and is valid
+#     if TOKEN_PATH.exists():
+#         creds = Credentials.from_authorized_user_info(
+#             json.loads(TOKEN_PATH.read_text()), SCOPES
+#         )
+
+#     # If credentials don't exist or are invalid, refresh or get new ones
+#     if not creds or not creds.valid:
+#         if creds and creds.expired and creds.refresh_token:
+#             creds.refresh(Request())
+#         else:
+#             if not CREDENTIALS_PATH.exists():
+#                 print(
+#                     f"Error: {CREDENTIALS_PATH} not found. Please follow setup instructions."
+#                 )
+#                 return None
+
+#             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+#             creds = flow.run_local_server(port=0)
+
+#         # Save the credentials for the next run
+#         TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
+#         TOKEN_PATH.write_text(creds.to_json())
+
+#     # Create and return the Calendar service
+#     return build("calendar", "v3", credentials=creds)
+
+
+def get_calendar_service(access_token, refresh_token=None, client_id=None, client_secret=None):
     """
-    Authenticate and create a Google Calendar service object.
-
-    Returns:
-        A Google Calendar service object or None if authentication fails
+    Crea el servicio de Google Calendar usando el token recibido desde Django.
     """
-    creds = None
-
-    # Check if token exists and is valid
-    if TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_info(
-            json.loads(TOKEN_PATH.read_text()), SCOPES
-        )
-
-    # If credentials don't exist or are invalid, refresh or get new ones
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            if not CREDENTIALS_PATH.exists():
-                print(
-                    f"Error: {CREDENTIALS_PATH} not found. Please follow setup instructions."
-                )
-                return None
-
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-            creds = flow.run_local_server(port=0)
-
-        # Save the credentials for the next run
-        TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-        TOKEN_PATH.write_text(creds.to_json())
-
-    # Create and return the Calendar service
+    creds = Credentials(
+        token=access_token,
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=client_id,
+        client_secret=client_secret,
+        scopes=SCOPES,
+    )
     return build("calendar", "v3", credentials=creds)
-
 
 def format_event_time(event_time):
     """

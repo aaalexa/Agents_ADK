@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import AsyncIterable
 
+import certifi
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, WebSocket
 from fastapi.responses import FileResponse
@@ -16,20 +17,33 @@ from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
 from jarvis.agent import root_agent
-
+from session_store import session_tokens
 #
 # ADK Streaming
 #
-
+os.environ["SSL_CERT_FILE"] = certifi.where()
 # Load Gemini API Key
 load_dotenv()
 
 APP_NAME = "ADK Streaming example"
 session_service = InMemorySessionService()
 
-
-def start_agent_session(session_id, is_audio=False):
+def start_agent_session(
+        session_id, 
+        is_audio=False, 
+        access_token=None,
+        refresh_token=None,
+        client_id=None,
+        client_secret=None,):
     """Starts an agent session"""
+
+    # Save session tokens
+    session_tokens[session_id] = {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
 
     # Create a Session
     session = session_service.create_session(
@@ -196,9 +210,27 @@ async def websocket_endpoint(
     await websocket.accept()
     print(f"Client #{session_id} connected, audio mode: {is_audio}")
 
-    # Start agent session
+    # # Start agent session
+    # live_events, live_request_queue = start_agent_session(
+    #     session_id, is_audio == "true"
+    # )
+
+    # Espera el primer mensaje con los tokens
+    token_message = await websocket.receive_text()
+    token_data = json.loads(token_message)
+    access_token = token_data.get("access_token")
+    refresh_token = token_data.get("refresh_token")
+    client_id = token_data.get("client_id")
+    client_secret = token_data.get("client_secret")
+
+    print(f"[TOKENS RECIBIDOS] access_token: {access_token}, refresh_token: {refresh_token}, client_id: {client_id}, client_secret: {client_secret}")
+    # Start agent session, pasando los tokens
     live_events, live_request_queue = start_agent_session(
-        session_id, is_audio == "true"
+        session_id, is_audio == "true",
+        access_token=access_token,
+        refresh_token=refresh_token,
+        client_id=client_id,
+        client_secret=client_secret,
     )
 
     # Start tasks
@@ -211,4 +243,5 @@ async def websocket_endpoint(
     await asyncio.gather(agent_to_client_task, client_to_agent_task)
 
     # Disconnected
+    session_tokens.pop(session_id, None)
     print(f"Client #{session_id} disconnected")

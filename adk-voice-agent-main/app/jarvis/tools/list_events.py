@@ -5,9 +5,10 @@ List events tool for Google Calendar integration.
 import datetime
 
 from .calendar_utils import format_event_time, get_calendar_service
-
+from session_store import session_tokens
 
 def list_events(
+    session_id: str,
     start_date: str,
     days: int,
 ) -> dict:
@@ -25,8 +26,23 @@ def list_events(
         print("Listing events")
         print("Start date: ", start_date)
         print("Days: ", days)
+
+        # Obtén los tokens de la sesión
+        tokens = session_tokens.get(session_id)
+        if not tokens:
+            return {
+                "status": "error",
+                "message": "No se encontraron credenciales para esta sesión.",
+                "events": [],
+            }
+            
         # Get calendar service
-        service = get_calendar_service()
+        service = get_calendar_service(
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            client_id=tokens["client_id"],
+            client_secret=tokens["client_secret"],
+        )
         if not service:
             return {
                 "status": "error",

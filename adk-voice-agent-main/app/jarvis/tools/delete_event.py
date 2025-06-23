@@ -3,9 +3,10 @@ Delete event tool for Google Calendar integration.
 """
 
 from .calendar_utils import get_calendar_service
-
+from session_store import session_tokens
 
 def delete_event(
+    session_id: str,
     event_id: str,
     confirm: bool,
 ) -> dict:
@@ -27,8 +28,23 @@ def delete_event(
         }
 
     try:
+
+        # Obtén los tokens de la sesión
+        tokens = session_tokens.get(session_id)
+        if not tokens:
+            return {
+                "status": "error",
+                "message": "No se encontraron credenciales para esta sesión.",
+                "events": [],
+            }
+            
         # Get calendar service
-        service = get_calendar_service()
+        service = get_calendar_service(
+            access_token=tokens["access_token"],
+            refresh_token=tokens["refresh_token"],
+            client_id=tokens["client_id"],
+            client_secret=tokens["client_secret"],  
+        )
         if not service:
             return {
                 "status": "error",
