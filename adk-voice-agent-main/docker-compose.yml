@@ -1,0 +1,10 @@
+services:
+  adk-voice-agent:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app/credentials.json:/app/app/credentials.json
+      - ./.credentials:/root/.credentials
+    environment:
+      - PYTHONUNBUFFERED=1

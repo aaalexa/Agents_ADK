@@ -48,7 +48,7 @@ def get_calendar_service():
                 return None
 
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_local_server(port=8000)
 
         # Save the credentials for the next run
         TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)

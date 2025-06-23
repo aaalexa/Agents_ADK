@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from typing import AsyncIterable
-
+import subprocess
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, WebSocket
 from fastapi.responses import FileResponse
@@ -16,13 +16,15 @@ from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
 from jarvis.agent import root_agent
-
+import certifi
+from fastapi import Request
 #
 # ADK Streaming
 #
 
 # Load Gemini API Key
 load_dotenv()
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 APP_NAME = "ADK Streaming example"
 session_service = InMemorySessionService()
@@ -183,6 +185,23 @@ async def root():
     """Serves the index.html"""
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
+@app.post("/setup-calendar-auth")
+async def setup_calendar_auth(request: Request):
+    """
+    Ejecuta el script de autenticación de Google Calendar.
+    """
+    import sys
+    script_path = os.path.join(os.path.dirname(__file__), "setup_calendar_auth.py")
+    try:
+        result = subprocess.run(
+            [sys.executable, script_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return {"success": True, "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        return {"success": False, "output": e.stdout + "\n" + e.stderr}
 
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(
