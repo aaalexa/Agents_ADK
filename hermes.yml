@@ -1,0 +1,9 @@
+servers:
+  hr3d-agent:
+    server_credentials: .env.hermes
+    apps: 
+      Agents_ADK:
+        repository: https://github.com/aaalexa/Agents_ADK.git
+        branch: main
+        env: ./adk-voice-agent-main/app/.env
+        services: ./adk-voice-agent-main/docker-compose.yml
