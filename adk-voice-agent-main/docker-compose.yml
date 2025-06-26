@@ -2,7 +2,7 @@ services:
   adk-voice-agent:
     build: .
     ports:
-      - "8001:8001"
+      - "8000:8000"
     volumes:
       - ./app/credentials.json:/app/app/credentials.json
       - ./.credentials:/root/.credentials
