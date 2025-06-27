@@ -8,8 +8,6 @@
 
 // Global variables
 const sessionId = Math.random().toString().substring(10);
-const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-const ws_url = ws_protocol + window.location.host + "/ws/" + sessionId;
 let websocket = null;
 let is_audio = false;
 let currentMessageId = null; // Track the current message ID during a conversation turn
@@ -28,6 +26,8 @@ const recordingContainer = document.getElementById("recording-container");
 // WebSocket handlers
 function connectWebsocket() {
   // Connect websocket
+  const ws_protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const ws_url = ws_protocol + window.location.host + "/ws/" + sessionId;
   const wsUrl = ws_url + "?is_audio=" + is_audio;
   websocket = new WebSocket(wsUrl);
 
